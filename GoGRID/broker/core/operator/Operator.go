@@ -1,4 +1,4 @@
-package operator
+﻿package operator
 
 // Operator получатель и отправитель сообщений
 type Operator struct {

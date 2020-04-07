@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"grid/GoGRID/broker/core"
@@ -36,6 +36,7 @@ func main() {
 	chTasks = core.BrokeAsync(book, substr, taskCount)
 	chTasks = chTasks
 
+<<<<<<< HEAD
 	// for {
 	// 	select {
 	// 	case task := <-chTasks:
@@ -43,6 +44,19 @@ func main() {
 	// 		task = task
 	// 	}
 	// }
+=======
+	for {
+		select {
+		case task := <-chTasks:
+			// задача в распределитель
+<<<<<<< HEAD
+
+=======
+			task = task
+>>>>>>> Init on my worflow
+		}
+	}
+>>>>>>> Init on my worflow
 }
 
 // GetData возвращает строку книги и искомой подстроки

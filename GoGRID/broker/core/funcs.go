@@ -1,4 +1,4 @@
-package core
+﻿package core
 
 // BrokeAsync возвращает канал, в который по мере разбиения будут поступать задачи
 func BrokeAsync(book, substr string, taskCount int) (chTasks chan string) {
