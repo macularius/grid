@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"grid/GoGRID/broker/core"
+	"grid/GoGRID/broker/core/settings"
 	"grid/GoGRID/broker/optimizer"
 )
 
@@ -13,7 +15,18 @@ func main() {
 		taskCount int
 
 		chTasks chan string
+
+		configurator *settings.ApplicationConfigurator
+
+		err error
 	)
+
+	configurator = new(settings.ApplicationConfigurator)
+	err = configurator.ReadConfig()
+	if err != nil {
+		fmt.Printf("error main.main : configurator.ReadConfig, %v\n", err)
+		return
+	}
 
 	book, substr = GetData()
 
@@ -25,7 +38,7 @@ func main() {
 		select {
 		case task := <-chTasks:
 			// задача в распределитель
-			
+
 		}
 	}
 }
