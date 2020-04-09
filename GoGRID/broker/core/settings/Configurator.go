@@ -34,3 +34,10 @@ func (c *ApplicationConfigurator) ReadConfig() (err error) {
 
 	return
 }
+
+// GetArgs обработка аргументов консольной строки
+func (c *ApplicationConfigurator) GetArgs() (err error) {
+	// внесение агрументов в объект конфига
+
+	return
+}
