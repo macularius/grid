@@ -1,7 +1,25 @@
 package main
 
+import (
+	"grid/GoGRID/worker/core/settings"
+	"log"
+)
+
 func main() {
+
+	var (
+		configurator *settings.ApplicationConfigurator
+
+		err error
+	)
+
 	// инит конфигурации
+	configurator = new(settings.ApplicationConfigurator)
+	err = configurator.Init()
+	if err != nil {
+		log.Printf("error main.main : configurator.Init, %v\n", err)
+		return
+	}
 
 	// запуск слушателя порта
 
