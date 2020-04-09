@@ -9,14 +9,13 @@ import (
 
 func main() {
 	var (
-		book   string
-		substr string
+		book   string // книга, получать по пути из аргумента консоли
+		substr string // подстрока, получать из аргумента консоли
 
-		taskCount int
+		taskCount int         // оптимальное количество задач
+		chTasks   chan string // канал задач
 
-		chTasks chan string
-
-		configurator *settings.ApplicationConfigurator
+		configurator *settings.ApplicationConfigurator // экземпляр конфигуратора
 
 		err error
 	)
@@ -27,20 +26,26 @@ func main() {
 		fmt.Printf("error main.main : configurator.ReadConfig, %v\n", err)
 		return
 	}
+	err = configurator.GetArgs()
+	if err != nil {
+		fmt.Printf("error main.main : configurator.GetArgs, %v\n", err)
+		return
+	}
 
 	book, substr = GetData()
 
 	taskCount = optimizer.Optimize2(12391238, 20)
 
 	chTasks = core.BrokeAsync(book, substr, taskCount)
+	chTasks = chTasks
 
-	for {
-		select {
-		case task := <-chTasks:
-			// задача в распределитель
-
-		}
-	}
+	// for {
+	// 	select {
+	// 	case task := <-chTasks:
+	// 		// задача в распределитель
+	// 		task = task
+	// 	}
+	// }
 }
 
 // GetData возвращает строку книги и искомой подстроки

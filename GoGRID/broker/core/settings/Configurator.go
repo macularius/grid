@@ -1,6 +1,8 @@
 package settings
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -37,7 +39,24 @@ func (c *ApplicationConfigurator) ReadConfig() (err error) {
 
 // GetArgs обработка аргументов консольной строки
 func (c *ApplicationConfigurator) GetArgs() (err error) {
+	var (
+		bookPath  string
+		subString string
+	)
+
 	// внесение агрументов в объект конфига
+	flag.StringVar(&bookPath, "bookpath", "", "Путь к файлу-книге")
+	flag.StringVar(&subString, "substr", "", "Искомая подстрока")
+
+	// after all flag definitions you must call
+	flag.Parse()
+
+	// then we can access our values
+	fmt.Printf("Value of bookpath is: %s\n", bookPath)
+	fmt.Printf("Value of substr is: %s\n", subString)
+
+	Config.bookpath = bookPath
+	Config.substr = subString
 
 	return
 }
