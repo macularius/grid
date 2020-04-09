@@ -2,7 +2,6 @@ package settings
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
@@ -14,6 +13,23 @@ var Config Settings
 
 // ApplicationConfigurator Структура для работы с конфигурацией
 type ApplicationConfigurator struct {
+}
+
+// Init инициализацияконфигурации
+func (c *ApplicationConfigurator) Init() (err error) {
+	c.ReadConfig()
+	if err != nil {
+		log.Printf("error ApplicationConfigurator.Init : configurator.Init, %v\n", err)
+		return
+	}
+
+	c.GetArgs()
+	if err != nil {
+		log.Printf("error ApplicationConfigurator.Init : configurator.Init, %v\n", err)
+		return
+	}
+
+	return
 }
 
 // ReadConfig Зачитывает конфигурацию из ini файла /../conf/conf.ini
@@ -52,11 +68,11 @@ func (c *ApplicationConfigurator) GetArgs() (err error) {
 	flag.Parse()
 
 	// then we can access our values
-	fmt.Printf("Value of bookpath is: %s\n", bookPath)
-	fmt.Printf("Value of substr is: %s\n", subString)
+	log.Printf("Value of bookpath is: %s\n", bookPath)
+	log.Printf("Value of substr is: %s\n", subString)
 
-	Config.bookpath = bookPath
-	Config.substr = subString
+	Config.Bookpath = bookPath
+	Config.Substr = subString
 
 	return
 }

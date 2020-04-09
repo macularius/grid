@@ -2,9 +2,9 @@ package settings
 
 // Settings конфигурация
 type Settings struct {
-	distributorHost string `ini:"distributorHost"` // хост распределителя
-	distributorPort string `ini:"distributorPort"` // порт распределителя
+	DistributorHost string `ini:"distributorHost"` // хост распределителя
+	DistributorPort string `ini:"distributorPort"` // порт распределителя
 
-	bookpath string // путь к книге
-	substr   string // подстрока
+	Bookpath string // путь к книге
+	Substr   string // подстрока
 }

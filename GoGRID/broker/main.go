@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"grid/GoGRID/broker/core"
 	"grid/GoGRID/broker/core/settings"
 	"grid/GoGRID/broker/optimizer"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 func main() {
@@ -21,14 +23,9 @@ func main() {
 	)
 
 	configurator = new(settings.ApplicationConfigurator)
-	err = configurator.ReadConfig()
+	err = configurator.Init()
 	if err != nil {
-		fmt.Printf("error main.main : configurator.ReadConfig, %v\n", err)
-		return
-	}
-	err = configurator.GetArgs()
-	if err != nil {
-		fmt.Printf("error main.main : configurator.GetArgs, %v\n", err)
+		log.Printf("error main.main : configurator.Init, %v\n", err)
 		return
 	}
 
@@ -49,7 +46,25 @@ func main() {
 }
 
 // GetData возвращает строку книги и искомой подстроки
-func GetData() (book, substr string) {
+func GetData(book, substr string) (err error) {
+	var (
+		f *os.File
+		b []byte
+	)
+
+	substr = settings.Config.Substr
+
+	f, err = os.Open(settings.Config.Bookpath)
+	if err != nil {
+		log.Printf("error main.GetData : os.Open, %v\n", err)
+		return
+	}
+
+	b, err = ioutil.ReadAll(f)
+	if err != nil {
+		log.Printf("error main.GetData : ioutil.ReadAll, %v\n", err)
+		return
+	}
 
 	return
 }
