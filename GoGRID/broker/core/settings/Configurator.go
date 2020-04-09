@@ -56,23 +56,31 @@ func (c *ApplicationConfigurator) ReadConfig() (err error) {
 // GetArgs обработка аргументов консольной строки
 func (c *ApplicationConfigurator) GetArgs() (err error) {
 	var (
-		bookPath  string
-		subString string
+		bookPath         string
+		subString        string
+		workCodeFilePath string
 	)
 
 	// внесение агрументов в объект конфига
 	flag.StringVar(&bookPath, "bookpath", "", "Путь к файлу-книге")
 	flag.StringVar(&subString, "substr", "", "Искомая подстрока")
+	flag.StringVar(&workCodeFilePath, "workcode_filepath", "", "Путь к файлу исполняемого кода")
 
-	// after all flag definitions you must call
 	flag.Parse()
 
-	// then we can access our values
 	log.Printf("Value of bookpath is: %s\n", bookPath)
 	log.Printf("Value of substr is: %s\n", subString)
+	log.Printf("Value of workcode_filepath is: %s\n", workCodeFilePath)
 
-	Config.Bookpath = bookPath
-	Config.Substr = subString
+	if bookPath != "" {
+		Config.Bookpath = bookPath
+	}
+	if subString != "" {
+		Config.Substr = subString
+	}
+	if workCodeFilePath != "" {
+		Config.WorkCodeFilePath = workCodeFilePath
+	}
 
 	return
 }

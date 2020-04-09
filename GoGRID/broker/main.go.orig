@@ -17,10 +17,10 @@ func main() {
 
 		taskCount int         // оптимальное количество задач
 		chTasks   chan string // канал задач
-		// chAnswers chan int // канал ответов
+		chAnswers chan int
 
 		configurator *settings.ApplicationConfigurator // экземпляр конфигуратора
-		appOperator  *operator.Operator                // экземпляр оператора
+		operator     *operator.Operator                // экземпляр оператора
 
 		err error
 	)
@@ -34,10 +34,10 @@ func main() {
 	}
 
 	// инициализация оператора
-	appOperator = new(operator.Operator)
-	err = appOperator.Init()
+	operator = new(operator.Operator)
+	err = operator.Init()
 	if err != nil {
-		log.Printf("error main.main : appOperator.Init, %v\n", err)
+		log.Printf("error main.main : operator.Init, %v\n", err)
 		return
 	}
 
@@ -53,14 +53,39 @@ func main() {
 
 	// формирование задач
 	chTasks = core.BrokeAsync(book, substr, taskCount)
+<<<<<<< HEAD
+	chTasks = chTasks
 
+<<<<<<< HEAD
+	// for {
+	// 	select {
+	// 	case task := <-chTasks:
+	// 		// задача в распределитель
+	// 		task = task
+	// 	}
+	// }
+=======
+=======
+
+>>>>>>> broker.operator
 	for {
 		select {
 		case task := <-chTasks:
 			// задача в распределитель
-			appOperator.SendTask(task)
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
+			task = task
+>>>>>>> Init on my worflow
 		}
 	}
+>>>>>>> Init on my worflow
+=======
+			operator.SendTask(task)
+		}
+	}
+>>>>>>> broker.operator
 }
 
 // GetData возвращает строку книги и искомой подстроки
