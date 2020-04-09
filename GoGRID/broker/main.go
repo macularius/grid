@@ -1,30 +1,34 @@
 package main
 
 import (
-	"grid/GoGRID/broker/core"
+	"fmt"
 	"grid/GoGRID/broker/optimizer"
 )
 
 func main() {
 	var (
-		book   string
-		substr string
+		// book   string
+		// substr string
 
 		taskCount int
 
-		chTasks chan string
+		// chTasks chan string
 	)
 
-	book, substr = GetData()
+	// book, substr = GetData()
 
-	taskCount = optimizer.Optimize(book, substr)
+	taskCount = optimizer.Optimize2(12391238, 20)
 
-	chTasks = core.BrokeAsync(book, substr, taskCount)
+	fmt.Println(taskCount)
+	return
+
+	// chTasks = core.BrokeAsync(book, substr, taskCount)
 
 	for {
 		select {
-		case task := <-chTasks:
-			// задача в распределитель
+		// case task := <-chTasks:
+		// задача в распределитель
+
 		}
 	}
 }
