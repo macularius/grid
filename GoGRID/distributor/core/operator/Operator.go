@@ -45,19 +45,16 @@ func (o *operator) Listen() {
 		dPort = settings.Config.DistributorPort
 	)
 
+	log.Printf("Дистрибутор слушает %s ...\n", net.JoinHostPort(dHost, dPort))
+
 	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
 }
 
 // AttachListener обрабатывает запросы воркеров на регистрацию
 func (o *operator) AttachListener(handleFunc http.HandlerFunc, url string) {
-	// получение задач
-	var (
-		dHost = settings.Config.DistributorHost
-		dPort = settings.Config.DistributorPort
-	)
+	log.Printf("Добавлен обработчик url[%s]\n", url)
 
 	http.HandleFunc(url, handleFunc)
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
 
 	return
 }

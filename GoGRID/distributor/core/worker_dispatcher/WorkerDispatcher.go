@@ -46,7 +46,7 @@ func (d *workerDispatcher) Init() (err error) {
 	d.newWorkersCh = make(chan *entities.Worker)
 	d.workersRegister = make(map[*entities.Worker]entities.Priority)
 
-	d.appOperator.AttachListener(workersHandler, "/worker/registation")
+	d.appOperator.AttachListener(workersHandler, "/worker/registration")
 
 	return
 }
@@ -54,11 +54,6 @@ func (d *workerDispatcher) Init() (err error) {
 // Run запускает рабочий цикл диспетчера
 func (d *workerDispatcher) Run() {
 	for {
-		select {
-		case worker := <-d.newWorkersCh:
-			log.Printf("Зарегистрирован воркер %+v\n", worker)
-			d.workersRegister[worker] = entities.STABLE
-		}
 	}
 }
 
@@ -114,7 +109,9 @@ func workersHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Синициирована регистрация воркера %+v\n", worker)
 
-	instance.newWorkersCh <- worker
+	instance.workersRegister[worker] = entities.STABLE
+
+	log.Printf("Зарегистрирован воркер %+v\n", worker)
 }
 
 // getWorker возвращает воркер

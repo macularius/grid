@@ -26,11 +26,11 @@ func (o *Operator) Init() (err error) {
 
 		resp *http.Response
 	)
+
+	log.Println("Начало отправки запроса")
+
 	// отправка сообщения
-	vals := url.Values{}
-	vals.Set("host", wHost)
-	vals.Set("port", wPort)
-	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/worker/registration", vals)
+	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/worker/registration", url.Values{"host": {wHost}, "port": {wPort}})
 	if err != nil {
 		log.Printf("error Operator.Init : http.PostForm, %v\n", err)
 		return

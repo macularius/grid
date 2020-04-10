@@ -116,7 +116,11 @@ func brokersListener(w http.ResponseWriter, r *http.Request) {
 	broker.Token, _ = uuid.New().MarshalBinary()
 
 	// запись токена в тело ответа
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(broker.Token)
+
+	// log.Printf("Сформирован ответ брокеру\n%+v\n\n", w)
 }
 func tasksListener(w http.ResponseWriter, r *http.Request) {
 	// получение новых задач

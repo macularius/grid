@@ -28,7 +28,6 @@ func (o *Operator) Init(taskCount int) (err error) {
 		bPort = settings.Config.BrokerPort // порт дистрибутора
 
 		resp *http.Response
-		i    int
 	)
 
 	// формирование запроса
@@ -39,14 +38,14 @@ func (o *Operator) Init(taskCount int) (err error) {
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Получен ответ на запрос регистрации брокера в дистрибуторе.\nresp: %+v\n\n", resp)
+	// log.Printf("Получен ответ на запрос регистрации брокера в дистрибуторе.\nresp: %+v\n\n", resp)
 
-	i, err = resp.Body.Read(o.token)
+	o.token, _ = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("error Operator.SendTask : resp.Body.Read, %v\n", err)
+		log.Printf("error Operator.SendTask : ioutil.ReadAll, %v\n", err)
 		return
 	}
-	if i == 0 {
+	if len(o.token) == 0 {
 		err = fmt.Errorf("Длина токена равна нулю")
 		return
 	}

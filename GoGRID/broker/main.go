@@ -70,11 +70,15 @@ func main() {
 		for {
 			select {
 			case task := <-chTasks:
+				log.Printf("Сформирована задача^ %+v\n", task)
+
 				// задача в распределитель
 				appOperator.SendTask(task)
 			}
 		}
 	}()
+
+	log.Println("Ожидание результата работы...")
 
 	// обработка результата
 	result := 0

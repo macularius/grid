@@ -27,14 +27,13 @@ func main() {
 		panic(err)
 	}
 
-	// инициализация диспетчера воркеров
+	// инициализация компонентов
+	appOperator = operator.GetOperator()
 	dispatcherWorkers = worker_dispatcher.GetWorkerDispatcher()
-
-	// инициализация диспетчера решений
 	dispatcherSolutions = solution_dispatcher.GetSolutionDispatcher()
 
+	// запуск компонентов
 	appOperator.Listen()
-
 	go dispatcherWorkers.Run()
 	go dispatcherSolutions.Run()
 
