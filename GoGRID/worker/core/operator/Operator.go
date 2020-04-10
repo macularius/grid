@@ -23,7 +23,7 @@ func (o *Operator) Init() (err error) {
 		req  *http.Request
 		resp *http.Response
 	)
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/registration", nil)
+	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/worker/registration", nil)
 	if err != nil {
 		log.Printf("error Operator.Init : http.NewRequest, %v\n", err)
 		return
@@ -43,6 +43,9 @@ func (o *Operator) Init() (err error) {
 		err = fmt.Errorf("Статус не OK")
 		return
 	}
+
+	
+
 	return
 }
 

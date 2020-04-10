@@ -56,12 +56,14 @@ func (c *ApplicationConfigurator) ReadConfig() (err error) {
 // GetArgs обработка аргументов консольной строки
 func (c *ApplicationConfigurator) GetArgs() (err error) {
 	var (
+		workerHost      string
 		workerPort      string
 		distributorHost string
 		distributorPort string
 	)
 
 	// внесение агрументов в объект конфига
+	flag.StringVar(&workerHost, "workerhost", "", "Хост, который слушает воркер")
 	flag.StringVar(&workerPort, "workerport", "", "Порт, который слушает воркер")
 	flag.StringVar(&distributorHost, "distributorHost", "", "хост распределителя")
 	flag.StringVar(&distributorPort, "distributorPort", "", "Порт распределителя")
@@ -70,10 +72,14 @@ func (c *ApplicationConfigurator) GetArgs() (err error) {
 	flag.Parse()
 
 	// then we can access our values
+	log.Printf("Value of workerhost is: %s\n", workerHost)
 	log.Printf("Value of workerport is: %s\n", workerPort)
 	log.Printf("Value of distributorHost is: %s\n", distributorHost)
 	log.Printf("Value of distributorPort is: %s\n", distributorPort)
 
+	if workerHost != "" {
+		Config.WorkerHost = workerHost
+	}
 	if workerPort != "" {
 		Config.WorkerPort = workerPort
 	}

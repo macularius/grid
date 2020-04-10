@@ -1,6 +1,7 @@
 package main
 
 import (
+	"grid/GoGRID/worker/core/operator"
 	"grid/GoGRID/worker/core/settings"
 	"log"
 )
@@ -20,6 +21,10 @@ func main() {
 		log.Printf("error main.main : configurator.Init, %v\n", err)
 		return
 	}
+
+	appOperator := new(operator.Operator)
+	appOperator.Init()
+	err = appOperator.Listener()
 
 	// запуск слушателя порта
 
