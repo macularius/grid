@@ -44,27 +44,18 @@ func (b *Broker) Send(res string) (err error) {
 	)
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(b.Host, b.Port)+"/distributor/solution", nil)
-	if err != nil {
-		log.Printf("error Worker.Send : http.NewRequest, %v\n", err)
-		return
-	}
 	fmt.Fprint(buf, res)
 	req.Write(buf)
 	if b.TaskCount == 0 {
 		req.PostForm.Add("finish_sign", "finish")
 	}
 
-	// формирование соединения
-	client := &http.Client{}
-
 	// отправка сообщения
-	resp, err = client.Do(req)
+	resp, err = http.Post("http://"+net.JoinHostPort(b.Host, b.Port)+"/distributor/solution", "text/html", buf)
 	if err != nil {
-		log.Printf("error Worker.Send : client.Do, %v\n", err)
+		log.Printf("error Worker.Send : http.PostForm, %v\n", err)
 		return
 	}
-
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Не удалось отправить")
 		return

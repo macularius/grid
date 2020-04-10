@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -26,30 +27,17 @@ func (o *Operator) Init(taskCount int) (err error) {
 		bHost = settings.Config.BrokerHost // хост дистрибутора
 		bPort = settings.Config.BrokerPort // порт дистрибутора
 
-		req  *http.Request
 		resp *http.Response
 		i    int
 	)
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/broker/registration", nil)
+	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/broker/registration", url.Values{"task_count": {strconv.Itoa(taskCount)}, "host": {bHost}, "port": {bPort}})
 	if err != nil {
-		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
+		log.Printf("error Operator.SendTask : http.PostForm, %v\n", err)
 		return
 	}
-	req.PostForm.Add("task_count", strconv.Itoa(taskCount)) // токен задачи
-	req.PostForm.Add("host", bHost)
-	req.PostForm.Add("port", bPort)
-
-	// формирование соединения
-	client := &http.Client{}
-
-	// отправка сообщения
-	resp, err = client.Do(req)
-	if err != nil {
-		log.Printf("error Operator.SendTask : client.Do, %v\n", err)
-		return
-	}
+	defer resp.Body.Close()
 
 	i, err = resp.Body.Read(o.token)
 	if err != nil {
@@ -90,9 +78,9 @@ func (o *Operator) SendTask(task string) (err error) {
 		return
 	}
 
-	req.Form.Add("token", string(o.token))   // токен задачи
-	req.PostForm.Add("task_body", task)      // тело задачи
-	req.PostForm.Add("code_file", string(b)) // файл рабочего кода
+	req.PostForm.Add("token", string(o.token)) // токен задачи
+	req.PostForm.Add("task_body", task)        // тело задачи
+	req.PostForm.Add("code_file", string(b))   // файл рабочего кода
 
 	// формирование соединения
 	client := &http.Client{}

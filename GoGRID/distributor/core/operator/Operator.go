@@ -62,6 +62,8 @@ func workersHandler(w http.ResponseWriter, r *http.Request) {
 		Port: port,
 	}
 
+	log.Printf("Синициирована регистрация воркера %+v\n", worker)
+
 	workersChIn <- worker
 }
 

@@ -55,6 +55,7 @@ func (d *workerDispatcher) Run() {
 	for {
 		select {
 		case worker := <-d.newWorkersCh:
+			log.Printf("Зарегистрирован воркер %+v\n", worker)
 			d.workersRegister[worker] = entities.STABLE
 		}
 	}
