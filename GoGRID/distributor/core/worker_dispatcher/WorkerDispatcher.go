@@ -2,6 +2,7 @@ package worker_dispatcher
 
 import (
 	"grid/GoGRID/distributor/core/entities"
+	"grid/GoGRID/distributor/core/operator"
 	"grid/GoGRID/distributor/core/settings"
 	"log"
 	"time"
@@ -25,30 +26,40 @@ func GetWorkerDispatcher() IWorkerDispatcher {
 	предоставляет интерфейс отправки задач
 */
 type IWorkerDispatcher interface {
-	Init() error                  // инициализирует диспетчер
-	Run()                         // запускает рабочий цикл диспетчера
-	SendTask(entities.Task) error // отправляет задачу воркеру
+	Init() error                           // инициализирует диспетчер
+	Run()                                  // запускает рабочий цикл диспетчера
+	SendTask(*entities.Task, []byte) error // отправляет задачу воркеру
 }
 
 // workerDispatcher диспетчера воркеров
 type workerDispatcher struct {
 	workersRegister map[*entities.Worker]entities.Priority // реестр воркеров
+	newWorkersCh    chan *entities.Worker                  // канал новых воркеров
+	appOperator     operator.IOperator                     // оператор
 }
 
 // Init инициализирует диспетчер
 func (d *workerDispatcher) Init() (err error) {
+	d.appOperator = operator.GetOperator()
+	d.newWorkersCh = make(chan *entities.Worker)
 
 	return
 }
 
 // Run запускает рабочий цикл диспетчера
 func (d *workerDispatcher) Run() {
+	d.appOperator.WorkerListener(d.newWorkersCh)
 
-	return
+	for {
+		select {
+		case worker := <-d.newWorkersCh:
+			d.workersRegister[worker] = entities.STABLE
+		}
+	}
 }
 
 // SendTask отправляет задачу воркеру
-func (d *workerDispatcher) SendTask(task entities.Task) (err error) {
+func (d *workerDispatcher) SendTask(task *entities.Task, token []byte) (err error) {
 	var (
 		curPriority     = entities.STABLE                                                     // текущий искомый приоритет
 		unstableAllFlag bool                                                                  // признак отсутствия стабильных источников
@@ -64,6 +75,13 @@ func (d *workerDispatcher) SendTask(task entities.Task) (err error) {
 		worker := d.getWorker(curPriority)
 		if worker != nil {
 			// попытка отправить сообщение
+			err = worker.Send(task, token)
+			if err != nil {
+				d.workerNextPriority(worker, curPriority)
+			} else {
+				delete(d.workersRegister, worker)
+				return
+			}
 		}
 
 		// переходим на следующий приоритет
@@ -89,4 +107,16 @@ func (d *workerDispatcher) getWorker(curPriority entities.Priority) (worker *ent
 	}
 
 	return
+}
+
+// workerNextPriority устанавливает следующий приоритет
+func (d *workerDispatcher) workerNextPriority(worker *entities.Worker, curPriority entities.Priority) {
+	switch curPriority {
+	case entities.STABLE:
+		d.workersRegister[worker] = entities.UNSTABLE1
+	case entities.UNSTABLE1:
+		d.workersRegister[worker] = entities.UNSTABLE2
+	case entities.UNSTABLE2:
+		delete(d.workersRegister, worker)
+	}
 }
