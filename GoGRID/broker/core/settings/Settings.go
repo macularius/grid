@@ -8,7 +8,7 @@ type Settings struct {
 	BrokerHost string `ini:"brokerHost"` // хост брокера
 	BrokerPort string `ini:"brokerPort"` // порт брокера
 
-	Bookpath         string // путь к книге
-	Substr           string // подстрока
-	WorkCodeFilePath string // путь к файлу исполняемого кода
+	Bookpath         string `ini:"bookpath"` // путь к книге
+	Substr           string `ini:"substr"` // подстрока
+	WorkCodeFilePath string `ini:"workCodeFilePath"` // путь к файлу исполняемого кода
 }
