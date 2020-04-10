@@ -51,13 +51,13 @@ func (o *Operator) Init() (err error) {
 func (o *Operator) Listener() (err error) {
 
 	var (
-		dHost = settings.Config.DistributorHost
-		dPort = settings.Config.DistributorPort
+		wHost = settings.Config.WorkerHost
+		wPort = settings.Config.WorkerPort
 	)
 
 	//прослушивание rest
 	http.HandleFunc("/distributor/task", solution)
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
+	log.Fatal(http.ListenAndServe(net.JoinHostPort(wHost, wPort), nil))
 
 	return
 }
