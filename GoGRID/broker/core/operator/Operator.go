@@ -7,7 +7,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 )
+
+var answerChIn chan<- string // канал ответов
 
 // Operator получатель и отправитель сообщений
 type Operator struct {
@@ -15,18 +18,31 @@ type Operator struct {
 }
 
 // Init регистрирует задачу в дистрибуторе
-func (o *Operator) Init() (err error) {
+func (o *Operator) Init(taskCount int) (err error) {
 	var (
 		dHost = settings.Config.DistributorHost // хост дистрибутора
 		dPort = settings.Config.DistributorPort // порт дистрибутора
 
+		req  *http.Request
 		resp *http.Response
 		i    int
 	)
 
-	resp, err = http.Get(net.JoinHostPort(dHost, dPort) + "/registration")
+	// формирование запроса
+	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/registration", nil)
 	if err != nil {
-		log.Printf("error Operator.SendTask : http.Get, %v\n", err)
+		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
+		return
+	}
+	req.Form.Add("task_count", strconv.Itoa(taskCount)) // токен задачи
+
+	// формирование соединения
+	client := &http.Client{}
+
+	// отправка сообщения
+	resp, err = client.Do(req)
+	if err != nil {
+		log.Printf("error Operator.SendTask : client.Do, %v\n", err)
 		return
 	}
 
@@ -92,7 +108,33 @@ func (o *Operator) SendTask(task string) (err error) {
 }
 
 // Listener ожидает ответы
-func (o *Operator) Listener(chAnswer chan<- int) (err error) {
+func (o *Operator) Listener(answChIn chan<- string) (err error) {
+	var (
+		bHost = settings.Config.BrokerHost
+		bPort = settings.Config.BrokerPort
+	)
+
+	answerChIn = answChIn
+
+	http.HandleFunc("/distributor/solution", solution)
+	log.Fatal(http.ListenAndServe(net.JoinHostPort(bHost, bPort), nil))
 
 	return
+}
+func solution(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error operator.solution : ioutil.ReadAll, %v\n", err)
+		return
+	}
+
+	if len(b) > 0 {
+		answer := string(b)
+		answerChIn <- answer
+	}
+
+	if res := r.PostForm.Get("finish_sign"); res != "" && res == "finish" {
+		answerChIn <- "finish"
+		return
+	}
 }

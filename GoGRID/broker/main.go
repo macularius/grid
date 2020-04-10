@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 
 		taskCount int         // оптимальное количество задач
 		chTasks   chan string // канал задач
-		// chAnswers chan int // канал ответов
+		chAnswers chan string // канал ответов
 
 		configurator *settings.ApplicationConfigurator // экземпляр конфигуратора
 		appOperator  *operator.Operator                // экземпляр оператора
@@ -30,37 +31,75 @@ func main() {
 	err = configurator.Init()
 	if err != nil {
 		log.Printf("error main.main : configurator.Init, %v\n", err)
-		return
+		panic(err)
 	}
 
 	// инициализация оператора
 	appOperator = new(operator.Operator)
-	err = appOperator.Init()
-	if err != nil {
-		log.Printf("error main.main : appOperator.Init, %v\n", err)
-		return
-	}
 
 	// получение книги и искомой строки
 	book, substr, err = GetData()
 	if err != nil {
 		log.Printf("error main.main : GetData, %v\n", err)
-		return
+		panic(err)
 	}
 
 	// получение оптимального количества задач
 	taskCount = optimizer.Optimize(book, substr)
 
+	// регистрируем оператор
+	err = appOperator.Init(taskCount)
+	if err != nil {
+		log.Printf("error main.main : appOperator.Init, %v\n", err)
+		panic(err)
+	}
+
 	// формирование задач
 	chTasks = core.BrokeAsync(book, substr, taskCount)
 
-	for {
-		select {
-		case task := <-chTasks:
-			// задача в распределитель
-			appOperator.SendTask(task)
-		}
+	// получение результата
+	chAnswers = make(chan string)
+	err = appOperator.Listener(chAnswers)
+	if err != nil {
+		log.Printf("error main.main : appOperator.Listener, %v\n", err)
+		panic(err)
 	}
+
+	// отправка задач в дистрибутор
+	go func() {
+		for {
+			select {
+			case task := <-chTasks:
+				// задача в распределитель
+				appOperator.SendTask(task)
+			}
+		}
+	}()
+
+	// обработка результата
+	result := 0
+	for i := 0; i < taskCount; i++ {
+		var res int
+
+		answer := <-chAnswers
+
+		if answer == "finish" && i != taskCount-1 {
+			log.Printf("Ошибка подсчета результата: обработано %v/%v решений. Результат = %v.\n", i, taskCount, result)
+			return
+		}
+
+		res, err = strconv.Atoi(answer)
+		if err != nil {
+			log.Printf("error main.main : strconv.Atoi, %v\n", err)
+			continue
+		}
+
+		result += res
+
+		log.Printf("Получено решение %v. Текущий результат = %v.\n", res, result)
+	}
+
+	log.Printf("!!!CONGRATULATIONS!!!\n\tЗадача решена, результат = %v.\n", result)
 }
 
 // GetData возвращает строку книги и искомой подстроки
