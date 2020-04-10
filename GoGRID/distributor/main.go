@@ -9,9 +9,9 @@ import (
 
 func main() {
 	var (
-		configurator        *settings.ApplicationConfigurator      // экземпляр конфигуратора
-		dispatcherWorkers   worker_dispatcher.IWorkerDispatcher    // экземпляр диспетчера воркеров
-		dispatcherSolutions solution_dispatcher.SolutionDispatcher // экземпляр диспетчера решений
+		configurator        *settings.ApplicationConfigurator       // экземпляр конфигуратора
+		dispatcherWorkers   worker_dispatcher.IWorkerDispatcher     // экземпляр диспетчера воркеров
+		dispatcherSolutions solution_dispatcher.ISolutionDispatcher // экземпляр диспетчера решений
 
 		err error
 	)
@@ -25,6 +25,13 @@ func main() {
 	}
 
 	// инициализация диспетчера воркеров
+	dispatcherWorkers = worker_dispatcher.GetWorkerDispatcher()
+	go dispatcherWorkers.Run()
 
 	// инициализация диспетчера решений
+	dispatcherSolutions = solution_dispatcher.GetSolutionDispatcher()
+	go dispatcherSolutions.Run()
+
+	for {
+	}
 }

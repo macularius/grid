@@ -15,6 +15,7 @@ var instance *workerDispatcher
 func GetWorkerDispatcher() IWorkerDispatcher {
 	if instance == nil {
 		instance = new(workerDispatcher)
+		instance.Init()
 	}
 
 	return instance
