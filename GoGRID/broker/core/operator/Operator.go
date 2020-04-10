@@ -32,7 +32,7 @@ func (o *Operator) Init(taskCount int) (err error) {
 	)
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/broker/registration", nil)
+	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/broker/registration", nil)
 	if err != nil {
 		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
 		return
@@ -84,7 +84,7 @@ func (o *Operator) SendTask(task string) (err error) {
 	}
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/broker/task", nil)
+	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/broker/task", nil)
 	if err != nil {
 		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
 		return

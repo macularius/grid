@@ -23,7 +23,7 @@ func (o *Operator) Init() (err error) {
 		req  *http.Request
 		resp *http.Response
 	)
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/worker/registration", nil)
+	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/registration", nil)
 	if err != nil {
 		log.Printf("error Operator.Init : http.NewRequest, %v\n", err)
 		return
@@ -43,8 +43,6 @@ func (o *Operator) Init() (err error) {
 		err = fmt.Errorf("Статус не OK")
 		return
 	}
-
-	
 
 	return
 }
@@ -72,7 +70,7 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		task_id       string
 		task_body     string
 		task_workcode string
-		URL           = net.JoinHostPort(settings.Config.DistributorHost, settings.Config.DistributorPort) + "/solution"
+		URL           = "http://" + net.JoinHostPort(settings.Config.DistributorHost, settings.Config.DistributorPort) + "/solution"
 	)
 	//вытащить из запроса параметры
 	//создать исполняемый файл и запустить его передав параметры:-token, -task_id
