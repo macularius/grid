@@ -9,7 +9,7 @@ import (
 )
 
 // экземпляр диспетчера воркеров
-var instance IWorkerDispatcher
+var instance *workerDispatcher
 
 // GetWorkerDispatcher возвращает экземпляр диспетчера воркеров
 func GetWorkerDispatcher() IWorkerDispatcher {
@@ -42,6 +42,7 @@ type workerDispatcher struct {
 func (d *workerDispatcher) Init() (err error) {
 	d.appOperator = operator.GetOperator()
 	d.newWorkersCh = make(chan *entities.Worker)
+	d.workersRegister = make(map[*entities.Worker]entities.Priority)
 
 	return
 }

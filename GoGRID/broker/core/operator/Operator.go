@@ -32,13 +32,14 @@ func (o *Operator) Init(taskCount int) (err error) {
 	)
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/registration", nil)
+	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/broker/registration", nil)
 	if err != nil {
 		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
 		return
 	}
 	req.PostForm.Add("task_count", strconv.Itoa(taskCount)) // токен задачи
-	req.PostForm.Add("host", net.JoinHostPort(bHost, bPort))
+	req.PostForm.Add("host", bHost)
+	req.PostForm.Add("port", bPort)
 
 	// формирование соединения
 	client := &http.Client{}
@@ -83,7 +84,7 @@ func (o *Operator) SendTask(task string) (err error) {
 	}
 
 	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/task", nil)
+	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(dHost, dPort)+"/broker/task", nil)
 	if err != nil {
 		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
 		return

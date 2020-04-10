@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -13,22 +14,63 @@ import (
 type Solution struct {
 	Token     []byte            // идентификатор решения
 	Broker    *Broker           // экземпляр брокера решения
-	Tasks     map[int]Task      // список задач
+	Tasks     map[int]*Task     // список задач
 	TaskQueue map[int]time.Time // очередь задач на отправку и время, с которого считать задачу не решенной
 }
 
 // Task тип задачи
 type Task struct {
+	Token    []byte // идентификатор решения
 	ID       int    // идентификатор задачи
 	WorkCode []byte // исполняемый код
 	Body     []byte // приложение к задаче
+	Result   string // решение задачи
 }
 
 // Broker тип брокера
 type Broker struct {
-	Token []byte // идентификатор решения
-	Host  string
-	Port  string
+	Token     []byte // идентификатор решения
+	Host      string
+	Port      string
+	TaskCount int
+}
+
+// Send отправляет результат в брокер
+func (b *Broker) Send(res string) (err error) {
+	var (
+		req  *http.Request
+		resp *http.Response
+		buf  *bytes.Buffer
+	)
+
+	// формирование запроса
+	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(b.Host, b.Port)+"/distributor/solution", nil)
+	if err != nil {
+		log.Printf("error Worker.Send : http.NewRequest, %v\n", err)
+		return
+	}
+	fmt.Fprint(buf, res)
+	req.Write(buf)
+	if b.TaskCount == 0 {
+		req.PostForm.Add("finish_sign", "finish")
+	}
+
+	// формирование соединения
+	client := &http.Client{}
+
+	// отправка сообщения
+	resp, err = client.Do(req)
+	if err != nil {
+		log.Printf("error Worker.Send : client.Do, %v\n", err)
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("Не удалось отправить")
+		return
+	}
+
+	return
 }
 
 // Worker тип воркера
