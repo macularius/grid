@@ -1,6 +1,7 @@
 ﻿package operator
 
 import (
+	"encoding/json"
 	"fmt"
 	"grid/GoGRID/broker/core/settings"
 	"io/ioutil"
@@ -15,7 +16,8 @@ var answerChIn chan<- string // канал ответов
 
 // Operator получатель и отправитель сообщений
 type Operator struct {
-	token []byte // идентификатор задачи в дистрибуторе
+	token        []byte // идентификатор задачи в дистрибуторе
+	workCodeFile []byte
 }
 
 // Init регистрирует задачу в дистрибуторе
@@ -29,6 +31,13 @@ func (o *Operator) Init(taskCount int) (err error) {
 
 		resp *http.Response
 	)
+
+	// получение файла исполняемого кода
+	o.workCodeFile, err = ioutil.ReadFile(settings.Config.WorkCodeFilePath)
+	if err != nil {
+		log.Printf("error Operator.SendTask : ioutil.ReadFile, %v\n", err)
+		return
+	}
 
 	// формирование запроса
 	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/broker/registration", url.Values{"task_count": {strconv.Itoa(taskCount)}, "host": {bHost}, "port": {bPort}})
@@ -59,37 +68,23 @@ func (o *Operator) SendTask(task string) (err error) {
 		dHost = settings.Config.DistributorHost // хост дистрибутора
 		dPort = settings.Config.DistributorPort // порт дистрибутора
 
-		req  *http.Request  // запрос
 		resp *http.Response // ответ
-
-		b []byte // тело файла исполняемого кода
 	)
 
-	// получение файла исполняемого кода
-	b, err = ioutil.ReadFile(settings.Config.WorkCodeFilePath)
+	taskBody := TaskFile{
+		Str:    task,
+		Substr: settings.Config.Substr,
+	}
+	taskb, err := json.Marshal(taskBody)
 	if err != nil {
-		log.Printf("error Operator.SendTask : ioutil.ReadFile, %v\n", err)
+		log.Printf("error Operator.SendTask : json.Marshal, %v\n", err)
 		return
 	}
-
-	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/broker/task", nil)
-	if err != nil {
-		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
-		return
-	}
-
-	req.PostForm.Add("token", string(o.token)) // токен задачи
-	req.PostForm.Add("task_body", task)        // тело задачи
-	req.PostForm.Add("code_file", string(b))   // файл рабочего кода
-
-	// формирование соединения
-	client := &http.Client{}
 
 	// отправка сообщения
-	resp, err = client.Do(req)
+	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/broker/task", url.Values{"token": {string(o.token)}, "task_body": {string(taskb)}, "code_file": {string(o.workCodeFile)}})
 	if err != nil {
-		log.Printf("error Operator.SendTask : client.Do, %v\n", err)
+		log.Printf("error Operator.SendTask : http.PostForm, %v\n", err)
 		return
 	}
 
@@ -133,4 +128,10 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		answerChIn <- "finish"
 		return
 	}
+}
+
+// TaskFile тип файла задачи
+type TaskFile struct {
+	Str    string `json:"str"`
+	Substr string `json:"substr"`
 }

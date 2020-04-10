@@ -59,22 +59,15 @@ func main() {
 
 	// получение результата
 	chAnswers = make(chan string)
-	err = appOperator.Listener(chAnswers)
-	if err != nil {
-		log.Printf("error main.main : appOperator.Listener, %v\n", err)
-		panic(err)
-	}
+	go appOperator.Listener(chAnswers)
 
 	// отправка задач в дистрибутор
 	go func() {
 		for {
-			select {
-			case task := <-chTasks:
-				log.Printf("Сформирована задача^ %+v\n", task)
+			task := <-chTasks
 
-				// задача в распределитель
-				appOperator.SendTask(task)
-			}
+			// задача в распределитель
+			appOperator.SendTask(task)
 		}
 	}()
 

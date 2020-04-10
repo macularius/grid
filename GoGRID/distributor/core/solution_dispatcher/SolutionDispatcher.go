@@ -68,30 +68,6 @@ func (d *solutionDispatcher) Init() (err error) {
 // Run запускает рабочий цикл диспетчера решений
 func (d *solutionDispatcher) Run() {
 	for {
-		select {
-		// слушать новые брокеры
-		case broker := <-d.newBrokersCh:
-			tasks := make(map[int]*entities.Task)
-			taskQueue := make(map[int]time.Time)
-
-			s := &entities.Solution{
-				Broker:    broker,
-				TaskQueue: taskQueue,
-				Tasks:     tasks,
-				Token:     broker.Token,
-			}
-			d.solutions[string(broker.Token)] = s
-
-			go d.Resolve(s)
-		// слушать новые задачи
-		case task := <-d.newTasksCh:
-			s := d.solutions[string(task.Token)]
-			id := len(s.Tasks) + 1
-
-			task.Result = "-1"
-			s.Tasks[id] = task
-		}
-
 	}
 }
 func brokersListener(w http.ResponseWriter, r *http.Request) {
@@ -115,11 +91,28 @@ func brokersListener(w http.ResponseWriter, r *http.Request) {
 	// формирование токена
 	broker.Token, _ = uuid.New().MarshalBinary()
 
+	// формирование глобальной задачи
+	tasks := make(map[int]*entities.Task)
+	taskQueue := make(map[int]time.Time)
+
+	s := &entities.Solution{
+		Broker:    broker,
+		TaskQueue: taskQueue,
+		Tasks:     tasks,
+		Token:     broker.Token,
+	}
+	instance.solutions[string(broker.Token)] = s
+
+	go instance.Resolve(s)
+
+	log.Printf("Синициирована регистрация брокера %+v\n", broker)
+
 	// запись токена в тело ответа
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(broker.Token)
 
+	log.Printf("Зарегистрирован брокер %+v\n", broker)
 	// log.Printf("Сформирован ответ брокеру\n%+v\n\n", w)
 }
 func tasksListener(w http.ResponseWriter, r *http.Request) {
@@ -147,8 +140,10 @@ func tasksListener(w http.ResponseWriter, r *http.Request) {
 	// присвоение id задаче
 	task.ID = len(instance.solutions[tokenStr].Tasks) + 1
 
-	// отправка задачи в канал
-	instance.newTasksCh <- task
+	// обработка задачи задачи в канал
+	s := instance.solutions[string(task.Token)]
+	id := len(s.Tasks) + 1
+	s.Tasks[id] = task
 
 }
 func solutionsListener(w http.ResponseWriter, r *http.Request) {
