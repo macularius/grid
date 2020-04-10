@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"context"
 	"fmt"
 	"grid/GoGRID/worker/core/settings"
 	"io/ioutil"
@@ -8,7 +9,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
+	"os/signal"
+	"time"
 )
 
 // Operator получатель и отправитель сообщений
@@ -55,8 +59,33 @@ func (o *Operator) Listener() (err error) {
 		wPort = settings.Config.WorkerPort
 	)
 
+	server := &http.Server{Addr: "http://" + net.JoinHostPort(wHost, wPort) + "/worker/solution", Handler: http.HandlerFunc(solution)}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			err = fmt.Errorf("Сервер не поднялся")
+			log.Printf("error Operator.Listener: http.Server, %v\n", err)
+		}
+	}()
+
+	// Setting up signal capturing
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	// Waiting for SIGINT (pkill -2)
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		err = fmt.Errorf("Сервер не упал")
+		log.Printf("error Operator.Listener: server.Shotdown, %v\n", err)
+	}
+
+	// Wait for ListenAndServe goroutine to close.
+
 	//прослушивание rest
-	http.HandleFunc("/distributor/task", solution)
+	//http.HandleFunc("/distributor/task", solution)
 	log.Fatal(http.ListenAndServe(net.JoinHostPort(wHost, wPort), nil))
 
 	return
