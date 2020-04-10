@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os/exec"
 )
 
@@ -20,29 +21,28 @@ func (o *Operator) Init() (err error) {
 		dHost = settings.Config.DistributorHost // хост дистрибутора
 		dPort = settings.Config.DistributorPort // порт дистрибутора
 
-		req  *http.Request
+		wHost = settings.Config.WorkerHost // хост дистрибутора
+		wPort = settings.Config.WorkerPort // порт дистрибутора
+
 		resp *http.Response
 	)
-	req, err = http.NewRequest(http.MethodPost, "http://"+net.JoinHostPort(dHost, dPort)+"/registration", nil)
-	if err != nil {
-		log.Printf("error Operator.Init : http.NewRequest, %v\n", err)
-		return
-	}
-
-	// формирование соединения
-	client := &http.Client{}
-
 	// отправка сообщения
-	resp, err = client.Do(req)
+	vals := url.Values{}
+	vals.Set("host", wHost)
+	vals.Set("port", wPort)
+	resp, err = http.PostForm("http://"+net.JoinHostPort(dHost, dPort)+"/worker/registration", vals)
 	if err != nil {
-		log.Printf("error Operator.Init : client.Do, %v\n", err)
+		log.Printf("error Operator.Init : http.PostForm, %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Статус не OK")
 		return
 	}
+
+	log.Printf("Отправлен запрос на регистрацию. Worker[%s:%s]\n", wHost, wPort)
 
 	return
 }
@@ -63,7 +63,6 @@ func (o *Operator) Listener() (err error) {
 }
 
 func solution(w http.ResponseWriter, r *http.Request) {
-
 	var (
 		err           error
 		token         string
@@ -72,9 +71,11 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		task_workcode string
 		URL           = "http://" + net.JoinHostPort(settings.Config.DistributorHost, settings.Config.DistributorPort) + "/solution"
 	)
-	//вытащить из запроса параметры
-	//создать исполняемый файл и запустить его передав параметры:-token, -task_id
+	defer r.Body.Close()
 
+	r.ParseForm()
+
+	//вытащить из запроса параметры
 	if token = r.PostForm.Get("token"); token == "" {
 		err = fmt.Errorf("Токен не может быть пустым")
 		log.Printf("error operator.solution : r.PostForm.Get, %v\n", err)
@@ -99,6 +100,7 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//создать исполняемый файл и запустить его передав параметры:-token, -task_id
 	ioutil.WriteFile("TaskFile.go", []byte(task_body), 0777)
 	if err != nil {
 		log.Printf("error Operator.solution : ioutil.WriteFile, %v\n", err)

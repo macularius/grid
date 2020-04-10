@@ -5,6 +5,7 @@ import (
 	"grid/GoGRID/distributor/core/operator"
 	"grid/GoGRID/distributor/core/settings"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -45,13 +46,13 @@ func (d *workerDispatcher) Init() (err error) {
 	d.newWorkersCh = make(chan *entities.Worker)
 	d.workersRegister = make(map[*entities.Worker]entities.Priority)
 
+	d.appOperator.AttachListener(workersHandler, "/worker/registation")
+
 	return
 }
 
 // Run запускает рабочий цикл диспетчера
 func (d *workerDispatcher) Run() {
-	d.appOperator.WorkerListener(d.newWorkersCh)
-
 	for {
 		select {
 		case worker := <-d.newWorkersCh:
@@ -97,6 +98,23 @@ func (d *workerDispatcher) SendTask(task *entities.Task, token []byte) (err erro
 			unstableAllFlag = true
 		}
 	}
+}
+func workersHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	r.ParseForm()
+
+	host := r.PostForm.Get("host")
+	port := r.PostForm.Get("port")
+
+	worker := &entities.Worker{
+		Host: host,
+		Port: port,
+	}
+
+	log.Printf("Синициирована регистрация воркера %+v\n", worker)
+
+	instance.newWorkersCh <- worker
 }
 
 // getWorker возвращает воркер

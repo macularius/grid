@@ -58,12 +58,15 @@ func (d *solutionDispatcher) Init() (err error) {
 	d.newBrokersCh = make(chan *entities.Broker)
 	d.newTasksCh = make(chan *entities.Task)
 
+	d.appOperator.AttachListener(brokersListener, "/broker/registration")
+	d.appOperator.AttachListener(solutionsListener, "/worker/solution")
+	d.appOperator.AttachListener(tasksListener, "/broker/task")
+
 	return
 }
 
 // Run запускает рабочий цикл диспетчера решений
 func (d *solutionDispatcher) Run() {
-
 	for {
 		select {
 		// слушать новые брокеры
@@ -98,6 +101,8 @@ func brokersListener(w http.ResponseWriter, r *http.Request) {
 	)
 	defer r.Body.Close()
 
+	r.ParseForm()
+
 	// формирование объекта брокера
 	taskCountStr = r.PostForm.Get("task_count")
 
@@ -122,6 +127,8 @@ func tasksListener(w http.ResponseWriter, r *http.Request) {
 	)
 	defer r.Body.Close()
 
+	r.ParseForm()
+
 	// формирование объекта задачи
 	tokenStr = r.Form.Get("token")            // токен задачи
 	bodyStr = r.PostForm.Get("task_body")     // тело задачи
@@ -143,6 +150,8 @@ func tasksListener(w http.ResponseWriter, r *http.Request) {
 func solutionsListener(w http.ResponseWriter, r *http.Request) {
 	// получение решений
 	defer r.Body.Close()
+
+	r.ParseForm()
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {

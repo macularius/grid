@@ -25,7 +25,8 @@ func GetOperator() IOperator {
 
 // IOperator интерфейс оператора - синглтон
 type IOperator interface {
-	WorkerListener(chan<- *entities.Worker) error // ожидает новые воркеры
+	Listen()
+	AttachListener(handleFunc http.HandlerFunc, url string)
 }
 
 // Operator получатель и отправитель сообщений
@@ -37,70 +38,25 @@ func (o *operator) Init() (err error) {
 	return
 }
 
-// WorkerListener ожидает новые воркеры
-func (o *operator) WorkerListener(workerChIn chan<- *entities.Worker) (err error) {
+// Listen ожидает новые воркеры
+func (o *operator) Listen() {
 	var (
 		dHost = settings.Config.DistributorHost
 		dPort = settings.Config.DistributorPort
 	)
 
-	workersChIn = workerChIn
-
-	http.HandleFunc("/worker/registration", workersHandler)
 	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
-
-	return
-}
-func workersHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	host := r.PostForm.Get("host")
-	port := r.PostForm.Get("port")
-
-	worker := &entities.Worker{
-		Host: host,
-		Port: port,
-	}
-
-	log.Printf("Синициирована регистрация воркера %+v\n", worker)
-
-	workersChIn <- worker
 }
 
-// BrokersListener обрабатывает запросы брокеров на регистрацию
-func (o *operator) BrokersListener(handleFunc http.HandlerFunc) {
+// AttachListener обрабатывает запросы воркеров на регистрацию
+func (o *operator) AttachListener(handleFunc http.HandlerFunc, url string) {
+	// получение задач
 	var (
 		dHost = settings.Config.DistributorHost
 		dPort = settings.Config.DistributorPort
 	)
 
-	http.HandleFunc("/broker/registration", handleFunc)
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
-
-	return
-}
-
-// WorkersListener обрабатывает запросы воркеров на регистрацию
-func (o *operator) WorkersListener(handleFunc http.HandlerFunc) {
-	var (
-		dHost = settings.Config.DistributorHost
-		dPort = settings.Config.DistributorPort
-	)
-
-	http.HandleFunc("/worker/registration", handleFunc)
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
-
-	return
-}
-
-// SolutionsListener обрабатывает запросы воркеров с решением
-func (o *operator) SolutionsListener(handleFunc http.HandlerFunc) {
-	var (
-		dHost = settings.Config.DistributorHost
-		dPort = settings.Config.DistributorPort
-	)
-
-	http.HandleFunc("/worker/solution", handleFunc)
+	http.HandleFunc(url, handleFunc)
 	log.Fatal(http.ListenAndServe(net.JoinHostPort(dHost, dPort), nil))
 
 	return

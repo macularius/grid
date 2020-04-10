@@ -39,6 +39,8 @@ func (o *Operator) Init(taskCount int) (err error) {
 	}
 	defer resp.Body.Close()
 
+	log.Printf("Получен ответ на запрос регистрации брокера в дистрибуторе.\nresp: %+v\n\n", resp)
+
 	i, err = resp.Body.Read(o.token)
 	if err != nil {
 		log.Printf("error Operator.SendTask : resp.Body.Read, %v\n", err)
@@ -125,6 +127,8 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		answer := string(b)
 		answerChIn <- answer
 	}
+
+	r.ParseForm()
 
 	if res := r.PostForm.Get("finish_sign"); res != "" && res == "finish" {
 		answerChIn <- "finish"

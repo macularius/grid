@@ -56,6 +56,7 @@ func (b *Broker) Send(res string) (err error) {
 		log.Printf("error Worker.Send : http.PostForm, %v\n", err)
 		return
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Не удалось отправить")
 		return
