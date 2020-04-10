@@ -55,6 +55,8 @@ func main() {
 		}
 	}
 
+	fmt.Printf("Результат: %v\n", res)
+
 	// отправка результата
 	var (
 		req  *http.Request

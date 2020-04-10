@@ -15,8 +15,6 @@ func BrokeAsync(book, substr string, taskCount int) (chTasks chan string) {
 			i      int
 		)
 
-		log.Printf("ОТЛАДКА 1\n")
-
 		if taskCount == 1 {
 			chTasks <- book
 			return
