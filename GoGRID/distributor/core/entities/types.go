@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -44,9 +45,10 @@ func (b *Broker) Send(res string) (err error) {
 	)
 
 	// формирование запроса
+	buf = new(bytes.Buffer)
 	fmt.Fprint(buf, res)
 	req.Write(buf)
-	if b.TaskCount == 0 {
+	if b.TaskCount == 1 {
 		req.PostForm.Add("finish_sign", "finish")
 	}
 
@@ -74,30 +76,16 @@ type Worker struct {
 // Send отправляет сообщение воркеру
 func (w *Worker) Send(t *Task, token []byte) (err error) {
 	var (
-		req  *http.Request
 		resp *http.Response
 	)
 
-	// формирование запроса
-	req, err = http.NewRequest(http.MethodPost, net.JoinHostPort(w.Host, w.Port)+"/distributor/task", nil)
-	if err != nil {
-		log.Printf("error Worker.Send : http.NewRequest, %v\n", err)
-		return
-	}
-	req.PostForm.Add("token", string(token))
-	req.PostForm.Add("task_id", strconv.Itoa(t.ID))
-	req.PostForm.Add("task_body", string(t.Body))
-	req.PostForm.Add("task_workcode", string(t.WorkCode))
-
-	// формирование соединения
-	client := &http.Client{}
-
 	// отправка сообщения
-	resp, err = client.Do(req)
+	resp, err = http.PostForm("http://"+net.JoinHostPort(w.Host, w.Port)+"/distributor/task", url.Values{"token": {string(token)}, "task_id": {strconv.Itoa(t.ID)}, "task_body": {string(t.Body)}, "task_workcode": {string(t.WorkCode)}})
 	if err != nil {
-		log.Printf("error Worker.Send : client.Do, %v\n", err)
+		log.Printf("error Worker.Send : http.PostForm, %v\n", err)
 		return
 	}
+	resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Не удалось отправить")

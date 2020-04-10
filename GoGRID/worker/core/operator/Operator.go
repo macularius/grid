@@ -129,13 +129,21 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//создать исполняемый файл и запустить его передав параметры:-token, -task_id
-	ioutil.WriteFile("TaskFile.go", []byte(task_body), 0777)
+	// создать файл приложение
+	ioutil.WriteFile("task.json", []byte(task_body), 0777)
 	if err != nil {
 		log.Printf("error Operator.solution : ioutil.WriteFile, %v\n", err)
 		return
 	}
 
+	//создать исполняемый файл и запустить его передав параметры:-token, -task_id
+	ioutil.WriteFile("TaskFile.go", []byte(task_workcode), 0777)
+	if err != nil {
+		log.Printf("error Operator.solution : ioutil.WriteFile, %v\n", err)
+		return
+	}
+
+	// TODO добавить флаг для json файла
 	cmd := exec.Command("go", "run", "TaskFile.go", "-task_id", task_id, "-token", token, "-URL", URL)
 	stdout, err := cmd.Output()
 

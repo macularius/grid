@@ -1,15 +1,21 @@
 ﻿package core
 
+import "log"
+
 // BrokeAsync возвращает канал, в который по мере разбиения будут поступать задачи
 func BrokeAsync(book, substr string, taskCount int) (chTasks chan string) {
 	chTasks = make(chan string)
 
 	go func(chTasks chan string, book, substr string, taskCount int) {
+		log.Printf("Начато асинхронное формирование задач\n\tкнига[%v], substr[%v], taskCount[%v]\n", len(book), len(substr), taskCount)
+
 		var (
 			x      int // сдвиг
 			piecln int // отрывок книги(задача)
 			i      int
 		)
+
+		log.Printf("ОТЛАДКА 1\n")
 
 		if taskCount == 1 {
 			chTasks <- book
@@ -25,6 +31,7 @@ func BrokeAsync(book, substr string, taskCount int) (chTasks chan string) {
 		for ; i < bookln-piecln; i += 1 + x {
 			chTasks <- book[i : i+piecln]
 		}
+
 		// если остаток книги после задачи меньше задачи, то включаем ее в последнюю задачу
 		if i < bookln {
 			chTasks <- book[i:]
