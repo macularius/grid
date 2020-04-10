@@ -23,6 +23,9 @@ func (o *Operator) Init(taskCount int) (err error) {
 		dHost = settings.Config.DistributorHost // хост дистрибутора
 		dPort = settings.Config.DistributorPort // порт дистрибутора
 
+		bHost = settings.Config.BrokerHost // хост дистрибутора
+		bPort = settings.Config.BrokerPort // порт дистрибутора
+
 		req  *http.Request
 		resp *http.Response
 		i    int
@@ -34,7 +37,8 @@ func (o *Operator) Init(taskCount int) (err error) {
 		log.Printf("error Operator.SendTask : http.NewRequest, %v\n", err)
 		return
 	}
-	req.Form.Add("task_count", strconv.Itoa(taskCount)) // токен задачи
+	req.PostForm.Add("task_count", strconv.Itoa(taskCount)) // токен задачи
+	req.PostForm.Add("host", net.JoinHostPort(bHost, bPort))
 
 	// формирование соединения
 	client := &http.Client{}
