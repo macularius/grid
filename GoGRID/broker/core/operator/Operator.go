@@ -58,6 +58,7 @@ func (o *Operator) Init(taskCount int) (err error) {
 		err = fmt.Errorf("Длина токена равна нулю")
 		return
 	}
+	fmt.Printf("Токен: %v\n", o.token)
 
 	return
 }
@@ -124,7 +125,7 @@ func solution(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 
-	if res := r.PostForm.Get("finish_sign"); res != "" && res == "finish" {
+	if res := r.Form.Get("finish_sign"); res != "" && res == "finish" {
 		answerChIn <- "finish"
 		return
 	}

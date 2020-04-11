@@ -1,6 +1,7 @@
 package solution_dispatcher
 
 import (
+	"fmt"
 	"grid/GoGRID/distributor/core/entities"
 	"grid/GoGRID/distributor/core/operator"
 	"grid/GoGRID/distributor/core/worker_dispatcher"
@@ -9,8 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -89,7 +88,7 @@ func brokersListener(w http.ResponseWriter, r *http.Request) {
 	broker.TaskCount, _ = strconv.Atoi(taskCountStr)
 
 	// формирование токена
-	broker.Token, _ = uuid.New().MarshalBinary()
+	broker.Token = "solution" + strconv.Itoa(len(instance.solutions))
 
 	// формирование глобальной задачи
 	tasks := make(map[int]*entities.Task)
@@ -110,7 +109,7 @@ func brokersListener(w http.ResponseWriter, r *http.Request) {
 	// запись токена в тело ответа
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(broker.Token)
+	w.Write([]byte(broker.Token))
 
 	log.Printf("Зарегистрирован брокер %+v\n", broker)
 	// log.Printf("Сформирован ответ брокеру\n%+v\n\n", w)
@@ -132,13 +131,15 @@ func tasksListener(w http.ResponseWriter, r *http.Request) {
 	workcodeStr = r.PostForm.Get("code_file") // файл рабочего кода
 
 	task := &entities.Task{}
-	task.Token = []byte(tokenStr)
+	task.Token = tokenStr
 	task.Body = []byte(bodyStr)
 	task.WorkCode = []byte(workcodeStr)
 	task.Result = "-1"
 
 	// присвоение id задаче
 	task.ID = len(instance.solutions[tokenStr].Tasks) + 1
+
+	// log.Printf("Синициирована задача token[%v]\n", task.Token)
 
 	// обработка задачи задачи в канал
 	s := instance.solutions[string(task.Token)]
@@ -158,18 +159,23 @@ func solutionsListener(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result := string(b)
-	taskIDStr := r.PostForm.Get("task_id")
+	taskIDStr := r.Form.Get("task_id")
 	taskID, _ := strconv.Atoi(taskIDStr)
-	token := r.PostForm.Get("token")
+	token := r.Form.Get("token")
 
-	var (
-		solution = instance.solutions[token]
-	)
+	solution, ok := instance.solutions[token]
+	if !ok {
+		err = fmt.Errorf("Несуществующий токен [%v]", []byte(token))
+		log.Printf("error solution_dispatcher.solutionsListener : ioutil.ReadAll, %v\n", err)
+		return
+	}
 
 	// зафиксировать задачу решенной
 	solution.Tasks[taskID].Result = result
 	delete(solution.TaskQueue, taskID)
 	solution.Broker.TaskCount--
+
+	log.Printf("Синициировано решение token[%v] taskID[%v] result[%v]\n", token, taskID, result)
 
 	// отправить решение в брокер
 	for {

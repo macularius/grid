@@ -30,7 +30,7 @@ func GetWorkerDispatcher() IWorkerDispatcher {
 type IWorkerDispatcher interface {
 	Init() error                           // инициализирует диспетчер
 	Run()                                  // запускает рабочий цикл диспетчера
-	SendTask(*entities.Task, []byte) error // отправляет задачу воркеру
+	SendTask(*entities.Task, string) error // отправляет задачу воркеру
 }
 
 // workerDispatcher диспетчера воркеров
@@ -58,7 +58,7 @@ func (d *workerDispatcher) Run() {
 }
 
 // SendTask отправляет задачу воркеру
-func (d *workerDispatcher) SendTask(task *entities.Task, token []byte) (err error) {
+func (d *workerDispatcher) SendTask(task *entities.Task, token string) (err error) {
 	var (
 		curPriority     = entities.STABLE                                                     // текущий искомый приоритет
 		unstableAllFlag bool                                                                  // признак отсутствия стабильных источников

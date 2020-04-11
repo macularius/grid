@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"context"
 	"fmt"
 	"grid/GoGRID/worker/core/settings"
 	"io/ioutil"
@@ -11,8 +10,11 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"os/signal"
-	"time"
+)
+
+var (
+	instance *Operator
+	worked   bool
 )
 
 // Operator получатель и отправитель сообщений
@@ -31,6 +33,8 @@ func (o *Operator) Init() (err error) {
 		resp *http.Response
 	)
 
+	instance = o
+
 	log.Println("Начало отправки запроса")
 
 	// отправка сообщения
@@ -43,6 +47,7 @@ func (o *Operator) Init() (err error) {
 
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Статус не OK")
+		log.Printf("error Operator.Init, %v\n", err)
 		return
 	}
 
@@ -53,42 +58,18 @@ func (o *Operator) Init() (err error) {
 
 // Listener ожидает ответы
 func (o *Operator) Listener() (err error) {
-
 	var (
 		wHost = settings.Config.WorkerHost
 		wPort = settings.Config.WorkerPort
 	)
 
-	server := &http.Server{Addr: "http://" + net.JoinHostPort(wHost, wPort) + "/worker/solution", Handler: http.HandlerFunc(solution)}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			err = fmt.Errorf("Сервер не поднялся")
-			log.Printf("error Operator.Listener: http.Server, %v\n", err)
+	http.HandleFunc("/distributor/task", solution)
+	for {
+		err := http.ListenAndServe(net.JoinHostPort(wHost, wPort), nil)
+		if err != nil {
+			log.Printf("error Operator.Listener : http.ListenAndServe, %v\n", err)
 		}
-	}()
-
-	// Setting up signal capturing
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
-
-	// Waiting for SIGINT (pkill -2)
-	<-stop
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		err = fmt.Errorf("Сервер не упал")
-		log.Printf("error Operator.Listener: server.Shotdown, %v\n", err)
 	}
-
-	// Wait for ListenAndServe goroutine to close.
-
-	//прослушивание rest
-	//http.HandleFunc("/distributor/task", solution)
-	log.Fatal(http.ListenAndServe(net.JoinHostPort(wHost, wPort), nil))
-
-	return
 }
 
 func solution(w http.ResponseWriter, r *http.Request) {
@@ -98,9 +79,15 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		task_id       string
 		task_body     string
 		task_workcode string
-		URL           = "http://" + net.JoinHostPort(settings.Config.DistributorHost, settings.Config.DistributorPort) + "/solution"
+		URL           = "http://" + net.JoinHostPort(settings.Config.DistributorHost, settings.Config.DistributorPort) + "/worker/solution"
 	)
 	defer r.Body.Close()
+
+	if worked {
+		return
+	}
+	worked = true
+	log.Printf("Начало решения задачи...\n")
 
 	r.ParseForm()
 
@@ -110,6 +97,7 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error operator.solution : r.PostForm.Get, %v\n", err)
 		return
 	}
+	fmt.Printf("Токен: %v\n", token)
 
 	if task_id = r.PostForm.Get("task_id"); task_id == "" {
 		err = fmt.Errorf("Идентификационный номер подзадачи отсутствует")
@@ -144,15 +132,26 @@ func solution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO добавить флаг для json файла
-	cmd := exec.Command("go", "run", "TaskFile.go", "-task_id", task_id, "-token", token, "-URL", URL)
+	cmd := exec.Command("go", "run", "TaskFile.go", "-id", task_id, "-token", token, "-URL", URL)
+	log.Printf("cmd: %v\n", cmd.Args)
 	stdout, err := cmd.Output()
-
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		log.Printf("Задача не решена...\n")
+	} else {
+		fmt.Print(string(stdout))
+		log.Printf("Задача решена...\n")
 	}
 
-	fmt.Print(string(stdout))
+	os.Remove("taskFile.go")
+	os.Remove("task.json")
+
+	worked = false
+
+	err = instance.Init()
+	if err != nil {
+		log.Printf("error operator.solution : instance.Init, %v\n", err)
+		return
+	}
 
 	return
 }

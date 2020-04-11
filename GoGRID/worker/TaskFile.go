@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -19,30 +18,38 @@ func main() {
 	)
 
 	// внесение агрументов в объект конфига
-	flag.StringVar(&taskID, "task_id", "", "Идентификатор задачи")
+	flag.StringVar(&taskID, "id", "", "Идентификатор задачи")
 	flag.StringVar(&token, "token", "", "Идентификатор глобальной задачи")
 	flag.StringVar(&url, "URL", "", "Адрес для ответа")
 
 	flag.Parse()
 
-	if taskID != "" {
-		panic(2)
+	if taskID == "" {
+		fmt.Println("taskID is nil")
+		return
 	}
-	if token != "" {
-		panic(2)
+	if token == "" {
+		fmt.Println("token is nil")
+		return
 	}
-	if url != "" {
-		panic(2)
+	if url == "" {
+		fmt.Println("url is nil")
+		return
 	}
+
+	fmt.Printf("taskID[%v], token[%v], url[%v]\n", taskID, token, url)
+	// return
 
 	// формирование объекта задачи
 	task := new(task)
 	b, err := ioutil.ReadFile("task.json")
 	if err != nil {
+		fmt.Printf("error ioutil.ReadFile, %v\n", err)
 		panic(err)
 	}
 	json.Unmarshal(b, &task)
 	if err != nil {
+		fmt.Printf("error json.Unmarshal, %v\n", err)
 		panic(err)
 	}
 
@@ -59,7 +66,6 @@ func main() {
 
 	// отправка результата
 	var (
-		req  *http.Request
 		resp *http.Response
 		buf  *bytes.Buffer
 	)
@@ -67,17 +73,17 @@ func main() {
 	// формирование запроса
 	buf = new(bytes.Buffer)
 	fmt.Fprint(buf, res)
-	req.Write(buf)
 
 	// отправка сообщения
-	resp, err = http.Post(url, "text/html", buf)
+	resp, err = http.Post(url+"?token="+token+"&task_id="+taskID, "text/html", buf)
 	if err != nil {
-		log.Printf("error main.main : http.PostForm, %v\n", err)
+		fmt.Printf("error http.Post, %v\n", err)
 		panic(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("Не удалось отправить")
+		fmt.Printf("error http.Post, %v\n", err)
 		return
 	}
 
