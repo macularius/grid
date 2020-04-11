@@ -66,9 +66,6 @@ func main() {
 	book1 = task.Str
 	book2 = task.Substr
 
-	fmt.Println(len(book1))
-	fmt.Println(len(book2))
-
 	for i := 0; i < len(book1); i++ {
 		fmt.Println("1")
 		if string(book1[i]) == string(book2[i]) {
@@ -94,7 +91,7 @@ func main() {
 
 	}
 
-	fmt.Printf("Результат: %v\n", res)
+	fmt.Printf("Результат: %v\n", resStr[0])
 
 	// отправка результата
 	var (
@@ -104,7 +101,7 @@ func main() {
 
 	// формирование запроса
 	buf = new(bytes.Buffer)
-	fmt.Fprint(buf, res)
+	fmt.Fprint(buf, resStr)
 
 	// отправка сообщения
 	resp, err = http.Post(url+"?token="+token+"&task_id="+taskID, "text/html", buf)
@@ -123,6 +120,6 @@ func main() {
 }
 
 type task struct {
-	Str    string `json:"str"`
-	Substr string `json:"substr"`
+	Str    string `json:"Book1"`
+	Substr string `json:"Book2"`
 }

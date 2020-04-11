@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -16,12 +15,14 @@ func main() {
 		book   string // книга, получать по пути из аргумента консоли
 		substr string // подстрока, получать из аргумента консоли
 
-		taskCount int         // оптимальное количество задач
-		chTasks   chan string // канал задач
-		chAnswers chan string // канал ответов
+		taskCount int                 // оптимальное количество задач
+		chTasks   chan core.PieOfBook // канал задач
+		chAnswers chan string         // канал ответов
 
 		configurator *settings.ApplicationConfigurator // экземпляр конфигуратора
 		appOperator  *operator.Operator                // экземпляр оператора
+
+		i int
 
 		err error
 	)
@@ -55,7 +56,7 @@ func main() {
 	}
 
 	// формирование задач
-	chTasks = core.BrokeAsync(book, substr, taskCount)
+	chTasks = core.BrokeSync1(book, substr, taskCount)
 
 	// получение результата
 	chAnswers = make(chan string)
@@ -75,9 +76,7 @@ func main() {
 
 	// обработка результата
 	result := 0
-	for i := 0; i < taskCount; i++ {
-		var res int
-
+	for i = 0; i < taskCount; i++ {
 		answer := <-chAnswers
 
 		if answer == "finish" && i != taskCount-1 {
@@ -85,18 +84,13 @@ func main() {
 			return
 		}
 
-		res, err = strconv.Atoi(answer)
-		if err != nil {
-			log.Printf("error main.main : strconv.Atoi, %v\n", err)
-			continue
+		if answer != "finish" {
+			log.Printf("Получено решение строка %v, длина %v.\n", answer, len(answer))
 		}
 
-		result += res
-
-		log.Printf("Получено решение %v. Текущий результат = %v.\n", res, result)
 	}
 
-	log.Printf("!!!CONGRATULATIONS!!!\n\tЗадача решена, результат = %v.\n", result)
+	log.Printf("!!!CONGRATULATIONS!!!\n\tЗадач решено[%v/%v].\n", i, taskCount, result)
 }
 
 // GetData возвращает строку книги и искомой подстроки
