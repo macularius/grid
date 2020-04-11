@@ -14,8 +14,8 @@ func Optimize(book, substr string) (taskCount int) {
 
 	// если книга сильно больше подстроки, то выставляем нижнюю границу оптимально промежутка длины задачи
 	// иначе отношение подстроки к книге
-	if float32(substrln)/float32(bookln) < 0.000152 {
-		i = 0.000152
+	if float32(substrln)/float32(bookln) < 0.00152 {
+		i = 0.00152
 	} else {
 		i = float32(substrln) / float32(bookln)
 	}
@@ -23,7 +23,7 @@ func Optimize(book, substr string) (taskCount int) {
 	for x <= 0 {
 		x = int(float32(bookln)*i) - substrln // сдвиг
 		if x < 1 {
-			i += 0.00005
+			i += 0.0005
 			continue
 		}
 
@@ -31,10 +31,14 @@ func Optimize(book, substr string) (taskCount int) {
 
 		fmt.Printf("Task count %v, i = %v\n", taskCount, i)
 
-		i += 0.00005
+		i += 0.0005
 	}
 
 	return
+}
+
+func Optimize3() (taskCount int) {
+	return 200
 }
 
 // Optimize2 возвращает оптимальное количество задач для указанных книги и подстроки
@@ -66,7 +70,7 @@ func Optimize2(book, substr string) (taskCount int) {
 
 		fmt.Printf("Task count %v, i = %v\n", taskCount, i)
 
-		i += 0.00005
+		i += 0.0005
 	}
 
 	return

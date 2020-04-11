@@ -71,6 +71,42 @@ func BrokeSync(book, substr string, taskCount int) (chTasks chan string) {
 	return
 }
 
+type PieOfBook struct {
+	Book1 string
+	Book2 string
+}
+
+// BrokeSync возвращает массив задач
+func BrokeSync1(book, substr string, taskCount int) (chTasks chan PieOfBook) {
+	chTasks = make(chan PieOfBook, taskCount)
+
+	var (
+		x      int // сдвиг
+		piecln int // отрывок книги(задача)
+		i      int
+	)
+
+	if taskCount == 1 {
+		chTasks <- PieOfBook{Book1: book, Book2: substr}
+		return
+	}
+
+	bookln := len(book)
+
+	x = bookln / taskCount
+	piecln = x
+
+	for ; i < bookln-piecln; i += 1 + x {
+		chTasks <- book[i : i+piecln]
+	}
+	// если остаток книги после задачи меньше задачи, то включаем ее в последнюю задачу
+	if i < bookln {
+		chTasks <- book[i:]
+	}
+
+	return
+}
+
 // AnswerCount принимает канал ответов и количество задач. Суммирует решени
 func AnswerCount(chAnswer <-chan int, taskCount int) (result int) {
 	for i := 0; i < taskCount; i++ {

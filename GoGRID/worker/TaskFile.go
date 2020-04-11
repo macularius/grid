@@ -66,6 +66,9 @@ func main() {
 	book1 = task.Str
 	book2 = task.Substr
 
+	fmt.Println(len(book1))
+	fmt.Println(len(book2))
+
 	for i := 0; i < len(book1); i++ {
 		fmt.Println("1")
 		if string(book1[i]) == string(book2[i]) {

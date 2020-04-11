@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// получение оптимального количества задач
-	taskCount = optimizer.Optimize(book, substr)
+	taskCount = optimizer.Optimize3()
 
 	// регистрируем оператор
 	err = appOperator.Init(taskCount)
@@ -106,7 +106,7 @@ func GetData() (book, substr string, err error) {
 		b []byte
 	)
 
-	substr = settings.Config.Substr
+	//substr = settings.Config.Substr
 
 	f, err = os.Open(settings.Config.Bookpath)
 	if err != nil {
@@ -121,6 +121,20 @@ func GetData() (book, substr string, err error) {
 		return
 	}
 	book = string(b)
+
+	f, err = os.Open(settings.Config.Substr)
+	if err != nil {
+		log.Printf("error main.GetData : os.Open, %v\n", err)
+		return
+	}
+	defer f.Close()
+
+	b, err = ioutil.ReadAll(f)
+	if err != nil {
+		log.Printf("error main.GetData : ioutil.ReadAll, %v\n", err)
+		return
+	}
+	substr = string(b)
 
 	return
 }
