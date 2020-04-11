@@ -91,7 +91,7 @@ func main() {
 
 	}
 
-	fmt.Printf("Результат: %v\n", res)
+	fmt.Printf("Результат: %v\n", resStr[0])
 
 	// отправка результата
 	var (
@@ -101,7 +101,7 @@ func main() {
 
 	// формирование запроса
 	buf = new(bytes.Buffer)
-	fmt.Fprint(buf, res)
+	fmt.Fprint(buf, resStr)
 
 	// отправка сообщения
 	resp, err = http.Post(url+"?token="+token+"&task_id="+taskID, "text/html", buf)
@@ -120,6 +120,6 @@ func main() {
 }
 
 type task struct {
-	Str    string `json:"str"`
-	Substr string `json:"substr"`
+	Str    string `json:"Book1"`
+	Substr string `json:"Book2"`
 }

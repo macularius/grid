@@ -97,11 +97,11 @@ func BrokeSync1(book, substr string, taskCount int) (chTasks chan PieOfBook) {
 	piecln = x
 
 	for ; i < bookln-piecln; i += 1 + x {
-		chTasks <- book[i : i+piecln]
+		chTasks <- PieOfBook{Book1: book[i : i+piecln], Book2: substr[i : i+piecln]}
 	}
 	// если остаток книги после задачи меньше задачи, то включаем ее в последнюю задачу
 	if i < bookln {
-		chTasks <- book[i:]
+		chTasks <- PieOfBook{Book1: book[i:], Book2: substr[i:]}
 	}
 
 	return

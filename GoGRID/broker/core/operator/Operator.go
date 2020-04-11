@@ -3,6 +3,7 @@
 import (
 	"encoding/json"
 	"fmt"
+	"grid/GoGRID/broker/core"
 	"grid/GoGRID/broker/core/settings"
 	"io/ioutil"
 	"log"
@@ -64,7 +65,7 @@ func (o *Operator) Init(taskCount int) (err error) {
 }
 
 // SendTask отправляет задачу в распределитель
-func (o *Operator) SendTask(task string) (err error) {
+func (o *Operator) SendTask(task core.PieOfBook) (err error) {
 	var (
 		dHost = settings.Config.DistributorHost // хост дистрибутора
 		dPort = settings.Config.DistributorPort // порт дистрибутора
@@ -72,11 +73,7 @@ func (o *Operator) SendTask(task string) (err error) {
 		resp *http.Response // ответ
 	)
 
-	taskBody := TaskFile{
-		Str:    task,
-		Substr: settings.Config.Substr,
-	}
-	taskb, err := json.Marshal(taskBody)
+	taskb, err := json.Marshal(task)
 	if err != nil {
 		log.Printf("error Operator.SendTask : json.Marshal, %v\n", err)
 		return
@@ -118,10 +115,8 @@ func solution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(b) > 0 {
-		answer := string(b)
-		answerChIn <- answer
-	}
+	answer := string(b)
+	answerChIn <- answer
 
 	r.ParseForm()
 

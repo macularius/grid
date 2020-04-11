@@ -159,6 +159,8 @@ func solutionsListener(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result := string(b)
+	log.Printf("Дистрибутор получил ответ [%v]\n", result)
+
 	taskIDStr := r.Form.Get("task_id")
 	taskID, _ := strconv.Atoi(taskIDStr)
 	token := r.Form.Get("token")
